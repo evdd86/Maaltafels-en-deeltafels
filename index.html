@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tafel Master - Video Surprise</title>
+    <script src="https://jsdelivr.net"></script>
+    <style>
+        body { font-family: 'Comic Sans MS', cursive, sans-serif; text-align: center; background: linear-gradient(135deg, #fceabb, #f8b500); min-height: 100vh; margin: 0; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: white; padding: 25px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); border: 4px solid #fff; }
+        h1 { color: #d35400; text-shadow: 1px 1px 0px #fff; }
+        .streak { font-size: 1.4em; font-weight: bold; color: #27ae60; margin-bottom: 10px; }
+        
+        #image-container { 
+            position: relative; width: 300px; height: 300px; margin: 15px auto; 
+            border: 6px solid #2c3e50; border-radius: 15px; overflow: hidden; background: #34495e;
+        }
+        #mystery-img { width: 100%; height: 100%; object-fit: cover; }
+        #grid { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(2, 1fr); 
+        }
+        .block { background: #3498db; border: 1px solid #2980b9; transition: transform 0.5s, opacity 0.5s; }
+        .hidden { opacity: 0; transform: scale(0.1) rotate(45deg); }
+
+        .question { font-size: 4em; margin: 15px 0; color: #2980b9; font-weight: bold; }
+        input[type="number"] { font-size: 2.2em; width: 130px; text-align: center; border-radius: 12px; border: 4px solid #3498db; outline: none; }
+        
+        #video-reward { display: none; margin-top: 20px; padding: 15px; border-radius: 15px; background: #f9f9f9; }
+        button { background: #e67e22; color: white; border: none; padding: 12px 25px; border-radius: 50px; cursor: pointer; font-size: 1.2em; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 0 #d35400; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #d35400; }
+        button:active { transform: translateY(2px); box-shadow: 0 2px 0 #d35400; }
+        .btn-reset { background: #7f8c8d; box-shadow: 0 4px 0 #95a5a6; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Tafel Master! 🏆</h1>
+    <div class="streak">Sommen te gaan: <span id="remaining">10</span></div>
+
+    <div id="image-container">
+        <img id="mystery-img" src="https://loremflickr.com" alt="Mystery">
+        <div id="grid">
+            <div class="block"></div><div class="block"></div><div class="block"></div><div class="block"></div><div class="block"></div>
+            <div class="block"></div><div class="block"></div><div class="block"></div><div class="block"></div><div class="block"></div>
+        </div>
+    </div>
+
+    <div id="game-controls">
+        <div class="question" id="question">?</div>
+        <input type="number" id="answer" autofocus placeholder="?">
+        <br>
+        <button onclick="checkAnswer()" style="margin-top: 15px;">Antwoord!</button>
+    </div>
+
+    <div id="video-reward">
+        <h2>🎉 GEWELDIG! 🎉</h2>
+        <p>Je hebt de verborgen foto onthuld!</p>
+        <a id="reward-link" href="#" target="_blank"><button>Bekijk je verrassing! 🍿</button></a>
+        <br>
+        <button class="btn-reset" onclick="resetGame()">Nog een keer</button>
+    </div>
+</div>
+
+<script>
+    let currentAnswer;
+    let score = 0;
+    const blocks = document.getElementsByClassName('block');
+    
+    // Lijst met grappige YouTube links
+    const videoList = [
+        "https://youtube.com", // Rickroll (classic)
+        "https://youtube.com", // Nyan Cat
+        "https://youtube.com", // Funny cat compilation
+        "https://youtube.com", // Hamster eating burrito
+        "https://youtube.com", // Talking twins babies
+        "https://youtube.com", // Screaming goat
+        "https://youtube.com", // Charlie bit my finger
+        "https://youtube.com", // Baby laughing at paper
+        "https://youtube.com", // Dog sneezing
+        "https://youtube.com"  // Keyboard cat
+    ];
+
+    function generateQuestion() {
+        if (score >= 10) return;
+        const table = Math.floor(Math.random() * 10) + 1;
+        const factor = Math.floor(Math.random() * 10) + 1;
+        const isDivision = Math.random() > 0.5;
+
+        if (isDivision) {
+            currentAnswer = factor;
+            document.getElementById('question').innerText = `${table * factor} : ${table}`;
+        } else {
+            currentAnswer = table * factor;
+            document.getElementById('question').innerText = `${table} x ${factor}`;
+        }
+    }
+
+    function checkAnswer() {
+        const input = document.getElementById('answer');
+        const val = parseInt(input.value);
+        
+        if (val === currentAnswer) {
+            blocks[score].classList.add('hidden');
+            score++;
+            document.getElementById('remaining').innerText = (10 - score);
+            
+            if (score === 10) {
+                winGame();
+            } else {
+                confetti({ particleCount: 60, spread: 70, origin: { y: 0.8 } });
+                generateQuestion();
+            }
+        } else {
+            // Fout antwoord schudden of effectje geven kan hier
+            input.style.borderColor = "red";
+            setTimeout(() => input.style.borderColor = "#3498db", 500);
+        }
+        input.value = "";
+        input.focus();
+    }
+
+    function winGame() {
+        document.getElementById('game-controls').style.display = 'none';
+        document.getElementById('video-reward').style.display = 'block';
+        
+        // Kies een willekeurige video uit de lijst
+        const randomVideo = videoList[Math.floor(Math.random() * videoList.length)];
+        document.getElementById('reward-link').href = randomVideo;
+        
+        // Grote confetti finale
+        const duration = 3 * 1000;
+        const end = Date.now() + duration;
+        (function frame() {
+            confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
+            confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+    }
+
+    function resetGame() {
+        score = 0;
+        document.getElementById('remaining').innerText = 10;
+        document.getElementById('video-reward').style.display = 'none';
+        document.getElementById('game-controls').style.display = 'block';
+        document.getElementById('mystery-img').src = "https://loremflickr.com?t=" + new Date().getTime();
+        for (let b of blocks) b.classList.remove('hidden');
+        generateQuestion();
+    }
+
+    document.getElementById('answer').addEventListener('keypress', (e) => { if (e.key === 'Enter') checkAnswer(); });
+    generateQuestion();
+</script>
+</body>
+</html>
